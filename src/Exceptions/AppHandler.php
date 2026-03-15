@@ -52,7 +52,7 @@ class AppHandler extends ExceptionHandler
      */
     public static function configure(Exceptions $exceptions): void
     {
-        // Register exception reporting (logging) only
+        // Register exception reporting (logging)
         $exceptions->report(function (Throwable $e) {
             $request = request();
 
@@ -78,6 +78,17 @@ class AppHandler extends ExceptionHandler
 
             return false; // Stop propagation to prevent duplicate logging
         })->stop();
+
+        // Register exception rendering
+        $exceptions->render(function (Throwable $e, Request $request) {
+            // For API requests, return JSON responses
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return static::renderException($e);
+            }
+
+            // For web requests, let Laravel handle default rendering
+            throw $e;
+        });
     }
 
     /**
