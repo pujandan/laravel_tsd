@@ -181,15 +181,13 @@ class AppLog
      */
     public static function getJobContext($job, array $extraContext = []): array
     {
-        $context = array_merge([
+        return array_merge([
             'job_id' => $job?->getJobId() ?? 'N/A',
             'queue' => $job?->getQueue() ?? 'default',
             'connection' => $job?->getConnectionName() ?? 'default',
             'attempts' => $job?->attempts() ?? 0,
             'max_tries' => $job?->maxTries ?? 0, // Use property (not method) for RedisJob compatibility
         ], $extraContext);
-
-        return $context;
     }
 
     /**
@@ -212,7 +210,7 @@ class AppLog
     {
         $request = $request ?: request();
 
-        $context = array_merge([
+        return array_merge([
             'request_id' => $request?->attributes->get('request_id', 'N/A') ?? 'N/A',
             'request' => [
                 'method' => $request?->method() ?? 'N/A',
@@ -225,7 +223,5 @@ class AppLog
                 'user_id' => null,
             ],
         ], $extraContext);
-
-        return $context;
     }
 }

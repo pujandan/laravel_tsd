@@ -5,7 +5,9 @@ namespace Daniardev\LaravelTsd\Helpers;
 use Daniardev\LaravelTsd\Data\PaginationData;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -48,11 +50,11 @@ class AppQuery
      * Paginate query from request with sorting.
      *
      * @param Builder $query Query builder instance
-     * @param \Illuminate\Http\Request $request HTTP request
+     * @param Request $request HTTP request
      * @param array|null $allowedColumns Optional whitelist of allowed sort columns
      * @return LengthAwarePaginator
      */
-    public static function pagination(Builder $query, \Illuminate\Http\Request $request, ?array $allowedColumns = null): LengthAwarePaginator
+    public static function pagination(Builder $query, Request $request, ?array $allowedColumns = null): LengthAwarePaginator
     {
         // Sorting
         $sortBy = $request->input('sort.by', 'created_at');
@@ -73,11 +75,11 @@ class AppQuery
      * Apply sorting to query from request.
      *
      * @param Builder $query Query builder instance
-     * @param \Illuminate\Http\Request $request HTTP request
+     * @param Request $request HTTP request
      * @param array|null $allowedColumns Optional whitelist of allowed sort columns
      * @return Builder
      */
-    public static function sort(Builder $query, \Illuminate\Http\Request $request, ?array $allowedColumns = null): Builder
+    public static function sort(Builder $query, Request $request, ?array $allowedColumns = null): Builder
     {
         $sortBy = $request->input('sort.by', 'created_at');
         $sortBy = AppHelper::isCamel($sortBy) ? Str::snake($sortBy) : $sortBy;
@@ -109,12 +111,12 @@ class AppQuery
     /**
      * Paginate a collection.
      *
-     * @param \Illuminate\Support\Collection $collection Collection to paginate
+     * @param Collection $collection Collection to paginate
      * @param PaginationData $pagination Pagination data
      * @return LengthAwarePaginator
      */
     public static function paginateCollection(
-        \Illuminate\Support\Collection $collection,
+        Collection $collection,
         PaginationData $pagination
     ): LengthAwarePaginator {
         $page = $pagination->page;
