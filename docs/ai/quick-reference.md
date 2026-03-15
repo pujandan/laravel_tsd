@@ -49,63 +49,166 @@ This creates `docs/laravel-tsd/` directory with all documentation.
 
 ### 0.3 Setup Exception Handler (REQUIRED)
 
-The package provides `LaravelTsdHandler` for standardized API error responses. **You must configure your project to use it.**
+The package provides `AppHandler` for standardized exception handling. **You must configure your project to use it.**
 
-**Option A: Extend in your app/Exceptions/Handler.php**
-
-```php
-<?php
-
-namespace App\Exceptions;
-
-use Daniardev\LaravelTsd\Exceptions\LaravelTsdHandler as BaseHandler;
-
-class Handler extends BaseHandler
-{
-    // Your project already inherits all TSD exception handling
-    // You can override methods if needed for custom behavior
-}
-```
-
-**Option B: Direct inheritance**
+**Step 1: Create app/Exceptions/Handler.php**
 
 ```php
 <?php
 
 namespace App\Exceptions;
 
-use Daniardev\LaravelTsd\Exceptions\LaravelTsdHandler;
+use Daniardev\LaravelTsd\Exceptions\AppHandler;
 
-class Handler extends LaravelTsdHandler
+class Handler extends AppHandler
 {
-    // Ready to use with standardized API error responses
+    // AppHandler provides all exception handling logic
 }
 ```
 
-**What LaravelTsdHandler provides:**
+**Step 2: Configure Laravel 11/12 (bootstrap/app.php)**
+
+```php
+use Daniardev\LaravelTsd\Exceptions\AppHandler;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(/* ... */)
+    ->withMiddleware(/* ... */)
+    ->withExceptions(fn (\Illuminate\Foundation\Configuration\Exceptions $e) => AppHandler::configure($e))
+    ->create();
+```
+
+**What AppHandler provides:**
 
 | Feature | Description |
 |---------|-------------|
-| **Standardized JSON errors** | Consistent error format for API |
-| **Security logging** | 401/403 logged as warnings |
-| **System error logging** | 500+ logged as errors |
-| **Validation errors** | Custom format with "moreError" support |
-| **Common exceptions** | Handles 404, 403, 405, 413, 429 automatically |
-| **Context sanitization** | Sensitive data masked in logs |
+| **API JSON responses** | Consistent `{"code": 401, "message": "..."}` format |
+| **Web HTML pages** | Laravel's default error pages (debug: stack trace, prod: simple) |
+| **Security logging** | 401/403 logged as WARNING |
+| **System error logging** | 500+ logged as ERROR |
+| **Generic approach** | Works with any exception type (not hard-coded) |
+| **Normal errors filtered** | 404, 422, 429, 419, 405, 413 NOT logged |
 
-### 0.4 Verify Setup
+### 0.4 Configure Logging (REQUIRED)
+
+The package uses a `json-daily` logging channel for structured JSON logs. You MUST configure this channel for `AppHandler` to work properly.
+
+**No custom files needed!** Just update `config/logging.php`:
+
+```php
+'channels' => [
+    // ... other channels
+
+    'json-daily' => [
+        'driver' => 'daily',
+        'path' => storage_path('logs/laravel.log'),
+        'level' => env('LOG_LEVEL', 'debug'),
+        'days' => 14,
+        'tap' => [Daniardev\LaravelTsd\Logging\AppLogFormatJson::class],
+    ],
+],
+```
+
+The package provides `AppLogFormatJson` class with:
+- ✅ `datetime` at the top (for better readability)
+- ✅ Pretty print for non-production (for easier debugging)
+- ✅ Compact JSON for production (smaller file size)
+
+#### Update Environment
+
+Update `.env` file:
+
+```env
+LOG_CHANNEL=json-daily
+LOG_LEVEL=debug
+```
+
+#### What Gets Logged
+
+| Exception Type | HTTP Code | Log Level | Logged? | Reason |
+|----------------|-----------|-----------|---------|--------|
+| `AuthenticationException` | 401 | WARNING | ✅ Yes | Security monitoring |
+| `AuthorizationException` | 403 | WARNING | ✅ Yes | Security monitoring |
+| `AppException (4xx)` | 400-499 | WARNING | ✅ Yes | Business logic tracking |
+| `NotFoundHttpException` | 404 | - | ❌ No | Normal user error |
+| `ModelNotFoundException` | 404 | - | ❌ No | Normal user error |
+| `ValidationException` | 422 | - | ❌ No | Expected validation |
+| `ThrottleRequestsException` | 429 | - | ❌ No | Rate limiting working |
+| `MethodNotAllowedHttpException` | 405 | - | ❌ No | User error |
+| `TokenMismatchException` | 419 | - | ❌ No | Normal session expiry |
+| `PostTooLargeException` | 413 | - | ❌ No | Validation error |
+| `QueryException` | 500 | ERROR | ✅ Yes | Database error |
+| `RuntimeException` | 500 | ERROR | ✅ Yes | System error |
+
+#### Verify Logging Works
+
+```bash
+# Test logging manually
+php artisan tinker
+>>> app('log')->channel('json-daily')->info('Test log', ['test' => 'data']);
+=> true
+
+# Check the log file
+cat storage/logs/laravel-$(date +%Y-%m-%d).log
+
+# You should see JSON formatted log like:
+{"message":"Test log","context":{"test":"data"},...}
+```
+
+#### Troubleshooting
+
+**Problem: Logs not appearing in file**
+
+1. Check `config/logging.php` - ensure `json-daily` channel exists
+2. Check `.env` - ensure `LOG_CHANNEL=json-daily`
+3. Check file permissions - ensure `storage/logs` is writable
+4. Clear config cache: `php artisan config:clear`
+
+**Problem: Logs not in JSON format**
+
+1. Ensure `FormatJsonLog` class exists in `app/Logging/`
+2. Check `tap` configuration in `config/logging.php`
+3. Clear config cache: `php artisan config:clear`
+
+### 0.5 Verify Setup
 
 After setup, verify your handler works:
 
+**Test API Error Responses:**
+
 ```bash
-# Test with invalid route (should return standardized 404)
+# Test 404 (should return JSON)
 curl http://your-app.test/api/invalid-route
 
 # Expected response:
-{
-  "code": 404,
-  "message": "Data not found."
-}
+{"code": 404, "message": "Not found"}
+
+# Test 401/403 (should return JSON)
+curl http://your-app.test/api/protected-route
+
+# Expected response:
+{"code": 401, "message": "Unauthenticated"}
+```
+
+**Test Web Error Pages:**
+
+```bash
+# Test web route (should return HTML)
+curl http://your-app.test/test-401
+
+# Expected: HTML error page with stack trace (if APP_DEBUG=true)
+```
+
+**Test Logging:**
+
+```bash
+# Trigger an error
+curl http://your-app.test/api/test-500
+
+# Check log file
+cat storage/logs/laravel-$(date +%Y-%m-%d).log | jq
+
+# Expected: JSON log with "level_name": "ERROR"
 ```
 
 ---

@@ -35,7 +35,7 @@ class AppException extends Exception
      * @return void
      */
     #[NoReturn]
-    public static function dd($data, int $status = 200): void
+    public static function dd(mixed $data, int $status = 200): void
     {
         response()
             ->json($data, $status)

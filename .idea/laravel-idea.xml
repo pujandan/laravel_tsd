@@ -7,6 +7,15 @@
   </component>
   <component name="LaravelIdeaMainSettings">
     <option name="appDirectory" value="src" />
+    <option name="codeGeneration">
+      <LaravelCodeGeneration>
+        <option name="generationStringSettings">
+          <map>
+            <entry key="createFormRequestDto:namespace" value="Data" />
+          </map>
+        </option>
+      </LaravelCodeGeneration>
+    </option>
     <option name="frameworkFound" value="true" />
   </component>
 </project>

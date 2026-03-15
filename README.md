@@ -25,12 +25,24 @@ Update `app/Exceptions/Handler.php`:
 
 namespace App\Exceptions;
 
-use Daniardev\LaravelTsd\Exceptions\LaravelTsdHandler;
+use Daniardev\LaravelTsd\Exceptions\AppHandler;
 
-class Handler extends LaravelTsdHandler
+class Handler extends AppHandler
 {
     // Your project now uses TSD exception handling
 }
+```
+
+**For Laravel 11/12 only:** Also update `bootstrap/app.php`:
+
+```php
+use Daniardev\LaravelTsd\Exceptions\AppHandler;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(/* ... */)
+    ->withMiddleware(/* ... */)
+    ->withExceptions(fn (\Illuminate\Foundation\Configuration\Exceptions $e) => AppHandler::configure($e))
+    ->create();
 ```
 
 ### Step 2: Update Base Model (Optional but Recommended)
@@ -114,7 +126,50 @@ php artisan vendor:publish --tag=laravel-tsd-docs
 
 This creates `docs/laravel-tsd/` directory with all documentation.
 
-### Step 5: Read Documentation
+### Step 5: Configure Logging (REQUIRED for AppHandler)
+
+The package uses a `json-daily` logging channel for structured JSON logs. You MUST configure this channel for proper exception logging.
+
+**Create `config/logging.php` channel (no custom files needed!):**
+
+```php
+'channels' => [
+    // ... other channels
+
+    'json-daily' => [
+        'driver' => 'daily',
+        'path' => storage_path('logs/laravel.log'),
+        'level' => env('LOG_LEVEL', 'debug'),
+        'days' => 14,
+        'tap' => [Daniardev\LaravelTsd\Logging\AppLogFormatJson::class],
+    ],
+],
+```
+
+**That's it!** The package provides `AppLogFormatJson` class with:
+- ✅ `datetime` at the top
+- ✅ Pretty print for non-production
+- ✅ Compact JSON for production
+
+**Update `.env` file:**
+
+```env
+LOG_CHANNEL=json-daily
+LOG_LEVEL=debug
+```
+
+**Verify logging works:**
+
+```bash
+# Test logging
+php artisan tinker
+>>> app('log')->channel('json-daily')->info('Test log', ['test' => 'data']);
+
+# Check the log file
+cat storage/logs/laravel-$(date +%Y-%m-%d).log
+```
+
+### Step 6: Read Documentation
 
 **Start here:** `docs/laravel-tsd/ai/quick-reference.md` - Complete coding rules
 
@@ -144,9 +199,12 @@ This creates `docs/laravel-tsd/` directory with all documentation.
 - **AppSecure** - Encryption/decryption
 - **AppMigration** - Migration helper
 
+### Logging (1)
+- **AppLogFormatJson** - JSON log formatter with datetime at top & pretty print (non-production)
+
 ### Exceptions (2)
 - **AppException** - Business logic exception
-- **LaravelTsdHandler** - Standard exception handler
+- **AppHandler** - Standard exception handler
 
 ### Data (1)
 - **PaginationData** - Pagination DTO
@@ -239,6 +297,7 @@ Schema::create('users', function (Blueprint $table) {
 | File | Description |
 |------|-------------|
 | **[docs/ai/quick-reference.md](docs/ai/quick-reference.md)** | ⭐ **START HERE** - All rules & patterns |
+| **[docs/patterns/logging-setup.md](docs/patterns/logging-setup.md)** | 🔧 **REQUIRED** - Logging configuration guide |
 | **[docs/ai/templates.md](docs/ai/templates.md)** | Code templates for all components |
 | **[docs/ai/checklist.md](docs/ai/checklist.md)** | Pre-commit validation checklist |
 | **[docs/patterns/service-layer.md](docs/patterns/service-layer.md)** | Service layer pattern details |
