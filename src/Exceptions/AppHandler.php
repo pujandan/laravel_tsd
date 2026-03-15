@@ -86,8 +86,8 @@ class AppHandler extends ExceptionHandler
                 return static::renderException($e);
             }
 
-            // For web requests, let Laravel handle default rendering
-            throw $e;
+            // For web requests, return null to let Laravel's default renderer handle it
+            return null;
         });
     }
 
