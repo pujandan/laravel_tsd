@@ -55,7 +55,7 @@ class {Entity}Controller extends Controller
         $items = $this->service->paginate(
             pagination: $this->pagination($request),
             search: $filters['search'] ?? null,
-            status: $filters['status'] ?? null,
+            status: $filters['status'] ?? null
             // Add all filter parameters as explicit, not ...$additionalFilters
         );
 
@@ -255,8 +255,8 @@ interface {Entity}Interface
      * ALL filters must be explicit parameters, NO array $filters
      *
      * @param PaginationData $pagination
-     * @param string|null $search
-     * @param string|null $status
+     * @param string|null $search Search keyword
+     * @param string|null $status Filter by status
      * @param string|null $otherField Add all filter fields explicitly
      * @return LengthAwarePaginator
      */
@@ -346,7 +346,13 @@ class {Entity}Service implements {Entity}Interface
     use AppTransactional;
 
     /**
-     * {@inheritdoc}
+     * Get paginated list with filters.
+     *
+     * @param PaginationData $pagination Pagination data (page, per_page, sort, sort_by)
+     * @param string|null $search Search keyword
+     * @param string|null $status Filter by status
+     * @param string|null $otherField Filter by other field
+     * @return LengthAwarePaginator Paginated result
      */
     public function paginate(
         PaginationData $pagination,
@@ -375,7 +381,10 @@ class {Entity}Service implements {Entity}Interface
     }
 
     /**
-     * {@inheritdoc}
+     * Find by ID or throw 404.
+     *
+     * @param string $id Entity ID
+     * @return {Entity} Found model
      */
     public function find(string $id): {Entity}
     {
@@ -383,7 +392,14 @@ class {Entity}Service implements {Entity}Interface
     }
 
     /**
-     * {@inheritdoc}
+     * Create new record.
+     *
+     * @param string $name Entity name
+     * @param string $email Entity email
+     * @param string|null $status Entity status (optional)
+     * @param string|null $otherField Other field value (optional)
+     * @return {Entity} Created model
+     * @throws AppException If email already exists
      */
     public function create(
         string $name,
@@ -417,7 +433,15 @@ class {Entity}Service implements {Entity}Interface
     }
 
     /**
-     * {@inheritdoc}
+     * Update existing record.
+     *
+     * @param string $id Entity ID
+     * @param string|null $name Entity name (optional)
+     * @param string|null $email Entity email (optional)
+     * @param string|null $status Entity status (optional)
+     * @param string|null $otherField Other field value (optional)
+     * @return {Entity} Updated model
+     * @throws AppException If email already exists or no data to update
      */
     public function update(
         string $id,
@@ -469,7 +493,11 @@ class {Entity}Service implements {Entity}Interface
     }
 
     /**
-     * {@inheritdoc}
+     * Delete record.
+     *
+     * @param string $id Entity ID
+     * @return {Entity} Deleted model
+     * @throws AppException If record is active and cannot be deleted
      */
     public function delete(string $id): {Entity}
     {
@@ -986,6 +1014,284 @@ return User::create($createData);
 | **Create resource** | [Resource Template](#7-resource-template) |
 | **Create collection** | [Collection Template](#8-collection-template) |
 | **Create migration** | [Migration Template](#9-migration-template) |
+| **Model with images** | [Model with AppHasImages](#bonus-model-with-images) |
+
+---
+
+## Bonus: Model with AppHasImages Trait
+
+**When to use:** Model needs to handle image uploads (single or multiple images).
+
+**⚠️ CRITICAL PATTERN:** Follows Youmrah project pattern - URLs generated in Resources, NOT stored in database.
+
+### Migration Template (with Image Fields - NO url field!)
+
+```php
+// database/migrations/YYYY_MM_DD_HHMMSS_create_boardings_table.php
+
+Schema::create('boardings', function (Blueprint $table) {
+    $table->uuid('id')->primary();
+    $table->string('title');
+    $table->text('description')->nullable();
+    $table->integer('order')->unsigned();
+    $table->boolean('is_active')->default(true);
+
+    // Only path and disk - NO url field!
+    $table->string('image_path');
+    $table->string('image_disk')->nullable();
+
+    $table->timestamps(6);
+    $table->auditFields();
+});
+```
+
+### Model Template (with AppHasImages)
+
+```php
+// app/Models/Boarding.php
+
+<?php
+
+namespace App\Models;
+
+use Daniardev\LaravelTsd\Traits\AppAuditable;
+use Daniardev\LaravelTsd\Traits\AppHasImages;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+
+class Boarding extends Model
+{
+    use HasUuids, AppAuditable, AppHasImages;
+
+    protected $guarded = ['id', 'created_at', 'updated_at'];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    // Optional: Customize storage config
+    public function getImageDiskConfig(): array
+    {
+        return [
+            'disk' => \Daniardev\LaravelTsd\Enums\Disk::FILES,
+            'directory' => \App\Enums\Directory::BOARDINGS, // Or 'boardings' string
+            // Note: both can use enum directly OR with ->value
+            // Visibility is auto-detected from disk config
+        ];
+    }
+}
+```
+
+### Form Request Template (with Image Validation)
+
+```php
+// app/Http/Requests/Api/Common/Boarding/BoardingFormRequest.php
+
+<?php
+
+namespace App\Http\Requests\Api\Common\Boarding;
+
+use Daniardev\LaravelTsd\Traits\AppRequestTrait;
+use Illuminate\Foundation\Http\FormRequest;
+
+class BoardingFormRequest extends FormRequest
+{
+    use AppRequestTrait;
+
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'title' => __('label.title'),
+            'description' => __('label.description'),
+            'image' => __('label.image'),
+            'order' => __('label.order'),
+            'is_active' => __('label.isActive'),
+        ];
+    }
+
+    public function rules(): array
+    {
+        return [
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'image' => ['required', function ($attribute, $value, $fail) {
+                // Support both file upload and base64
+                if (is_string($value)) {
+                    // Base64 validation
+                    if (!preg_match('/^data:image\/(jpg|jpeg|png|webp);base64,/', $value)) {
+                        $fail(__('validation.image', ['attribute' => __('label.image')]));
+                    }
+                } elseif (!($value instanceof \Illuminate\Http\UploadedFile)) {
+                    $fail(__('validation.image', ['attribute' => __('label.image')]));
+                }
+            }],
+            'order' => ['required', 'integer', 'min:1'],
+            'is_active' => ['nullable', 'boolean'],
+        ];
+    }
+}
+```
+
+### Controller Template (with Image Upload)
+
+```php
+// app/Http/Controllers/Api/Common/Boarding/BoardingController.php
+
+<?php
+
+namespace App\Http\Controllers\Api\Common\Boarding;
+
+use Daniardev\LaravelTsd\Helpers\AppResponse;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Common\Boarding\BoardingFormRequest;
+use App\Http\Resources\Api\Common\Boarding\BoardingResource;
+use App\Models\Boarding;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+
+class BoardingController extends Controller
+{
+    public function store(BoardingFormRequest $request): JsonResponse
+    {
+        return DB::transaction(function () use ($request) {
+            $validated = $request->validated();
+
+            $item = new Boarding();
+            $item->title = $validated['title'];
+            $item->description = $validated['description'] ?? null;
+            $item->order = $validated['order'];
+            $item->is_active = $validated['is_active'] ?? true;
+
+            // Upload image - auto-sets image_path, image_disk
+            $item->uploadImage($validated['image']);
+            $item->save();
+
+            return AppResponse::success(
+                BoardingResource::make($item),
+                __('message.successSaved')
+            );
+        });
+    }
+
+    public function update(BoardingFormRequest $request, string $id): JsonResponse
+    {
+        return DB::transaction(function () use ($request, $id) {
+            $validated = $request->validated();
+
+            $item = Boarding::findOrFail($id);
+
+            $item->title = $validated['title'] ?? $item->title;
+            $item->description = $validated['description'] ?? $item->description;
+            $item->order = $validated['order'] ?? $item->order;
+            $item->is_active = $validated['is_active'] ?? $item->is_active;
+
+            // Upload new image if provided (auto-deletes old image)
+            if (isset($validated['image'])) {
+                $item->uploadImage($validated['image']);
+            }
+
+            $item->save();
+
+            return AppResponse::success(
+                BoardingResource::make($item),
+                __('message.successUpdated')
+            );
+        });
+    }
+
+    public function destroy(string $id): JsonResponse
+    {
+        return DB::transaction(function () use ($id) {
+            // Image auto-deleted by trait's deleting event
+            $item = Boarding::findOrFail($id);
+            $item->delete();
+
+            return AppResponse::success(
+                BoardingResource::make($item),
+                __('message.successDeleted')
+            );
+        });
+    }
+}
+```
+
+### Resource Template (with Dynamic URL Generation)
+
+```php
+// app/Http/Resources/Api/Common/Boarding/BoardingResource.php
+
+<?php
+
+namespace App\Http\Resources\Api\Common\Boarding;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
+
+class BoardingResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'order' => $this->order,
+            'is_active' => $this->is_active,
+
+            // Storage fields from database
+            'image_path' => $this->image_path,
+            'image_disk' => $this->image_disk,
+
+            // URL generated dynamically (NOT stored in database!)
+            'image_url' => $this->when(
+                $this->image_path && $this->image_disk,
+                fn() => $this->getImageUrl()
+            ),
+
+            // Audit information
+            'audit' => [
+                'created' => [
+                    'at' => $this->created_at?->format('Y-m-d H:i:s'),
+                    'by' => $this->creator_name,
+                    'by_id' => $this->created_by,
+                ],
+                'updated' => [
+                    'at' => $this->updated_at?->format('Y-m-d H:i:s'),
+                    'by' => $this->updater_name,
+                    'by_id' => $this->updated_by,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Get image URL based on storage visibility.
+     * Private storage uses temporary URL with authentication token.
+     * Public storage uses direct URL.
+     */
+    protected function getImageUrl(): string
+    {
+        // For S3/S3-private/MinIO - use temporary URL with token
+        if (method_exists(Storage::disk($this->image_disk), 'temporaryUrl')) {
+            return Storage::disk($this->image_disk)->temporaryUrl(
+                $this->image_path,
+                now()->addMinutes(30) // URL expires in 30 minutes
+            );
+        }
+
+        // For local/public disks - return direct URL
+        return Storage::disk($this->image_disk)->url($this->image_path);
+    }
+}
+```
+
+**📘 Full AppHasImages Documentation:** `/docs/patterns/app-has-images.md`
 
 ---
 
@@ -993,5 +1299,5 @@ return User::create($createData);
 
 ---
 
-**Last Updated:** 2026-03-06
-**Version:** 4.1 (ALL Explicit Parameters - NO Array $data - NO meta wrapper)
+**Last Updated:** 2026-03-21
+**Version:** 4.2 (Full PHPDoc - NO {@inheritdoc})

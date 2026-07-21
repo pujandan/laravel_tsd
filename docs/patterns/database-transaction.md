@@ -104,9 +104,12 @@ public function destroy(string $id): JsonResponse
 // ✅ CORRECT - Read operations don't use transaction
 public function index(Request $request): JsonResponse
 {
+    $filters = $request->input('filter', []);
+
     $items = $this->service->paginate(
-        filters: $request->input('filter', []),
-        pagination: $this->pagination($request)
+        pagination: $this->pagination($request),
+        search: $filters['search'] ?? null,
+        status: $filters['status'] ?? null
     );
 
     return AppResponse::success(
@@ -233,9 +236,12 @@ class WhatsappDeviceController extends Controller
     // ❌ READ operation - NO transaction
     public function index(Request $request): JsonResponse
     {
+        $filters = $request->input('filter', []);
+
         $items = $this->service->paginate(
-            filters: $request->input('filter', []),
-            pagination: $this->pagination($request)
+            pagination: $this->pagination($request),
+            search: $filters['search'] ?? null,
+            status: $filters['status'] ?? null
         );
 
         return AppResponse::success(
@@ -368,12 +374,19 @@ class WhatsappDeviceService implements WhatsappDeviceInterface
     use AppTransactional; // ✅ Add trait
 
     // ❌ READ operation - NO requireTransaction()
-    public function paginate(array $filters, PaginationData $pagination): LengthAwarePaginator
-    {
+    public function paginate(
+        PaginationData $pagination,
+        ?string $search = null,
+        ?string $status = null
+    ): LengthAwarePaginator {
         $query = WhatsappDevice::query();
 
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if ($search !== null) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        if ($status !== null) {
+            $query->where('status', $status);
         }
 
         return AppQuery::paginate($query, $pagination);

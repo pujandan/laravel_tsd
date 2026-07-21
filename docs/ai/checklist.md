@@ -90,6 +90,28 @@ Use this checklist when creating or modifying service classes.
   - All return types are declared
   - Use proper types: `array`, `string`, `Model`, `LengthAwarePaginator`, etc.
 
+### PHPDoc Comments
+
+- [ ] **Service methods have complete PHPDoc**
+  - **NEVER use `{@inheritdoc}`** in service implementation
+  - Each method has full PHPDoc with `@param` and `@return`
+  - All parameters are documented with descriptions
+  - Return type is documented
+  - `@throws` included for methods that throw exceptions
+  - Example:
+    ```php
+    /**
+     * Create new record.
+     *
+     * @param string $name Entity name
+     * @param string $email Entity email
+     * @param string|null $status Entity status (optional)
+     * @return {Entity} Created model
+     * @throws AppException If email already exists
+     */
+    public function create(string $name, string $email, ?string $status = null): {Entity}
+    ```
+
 ### Method Quality
 
 - [ ] **Methods follow length guidelines**
@@ -183,6 +205,14 @@ Use this checklist when creating or modifying model classes.
 - [ ] **AppAuditable trait is present**
   - `use AppAuditable;` statement present
   - Trait is imported: `use Daniardev\LaravelTsd\Traits\AppAuditable;`
+
+- [ ] **AppHasImages trait (if model has images)**
+  - `use AppHasImages;` statement present
+  - Trait is imported: `use Daniardev\LaravelTsd\Traits\AppHasImages;`
+  - `getImageFields()` returns array of image fields if multiple images
+  - `getImageDiskConfig()` defined if custom storage needed
+  - **CRITICAL:** Migration includes ONLY `{field}_path` and `{field}_disk` (NO `{field}_url`!)
+  - URL is generated in Resource layer using `temporaryUrl()` for private files
 
 - [ ] **SoftDeletes trait (if needed)**
   - `use SoftDeletes;` present if `deleted_by` is needed
@@ -289,6 +319,13 @@ Use this checklist when creating or modifying resource classes.
   - Relations use `RelatedResource::make($this->relation)`
   - NO inlined relation data
   - Use `$this->when($this->relationLoaded('relation'), ...)` for conditional loading
+
+- [ ] **Image/ file URLs are generated dynamically (if AppHasImages used)**
+  - URLs generated using `$this->when($this->image_path && $this->image_disk, fn() => $this->getImageUrl())`
+  - Private files use `Storage::disk()->temporaryUrl()` with token (30 min expiry)
+  - Public files use `Storage::disk()->url()` for direct access
+  - URL generation method checks `method_exists(Storage::disk($disk), 'temporaryUrl')`
+  - NO URLs stored in database - only `{field}_path` and `{field}_disk`
 
 ### Collection Implementation
 
@@ -432,6 +469,29 @@ Use this checklist to catch common mistakes.
   - ✅ PHPDoc includes `@throws Throwable`
   - ❌ Missing PHPDoc or missing @throws
 
+- [ ] **NEVER use {@inheritdoc} in service implementation**
+  - ✅ Full PHPDoc with `@param`, `@return`, `@throws` for each method
+  - ❌ Using `{@inheritdoc}` - this prevents AI from generating proper documentation
+  - Example:
+    ```php
+    // ❌ WRONG - {@inheritdoc}
+    /**
+     * {@inheritdoc}
+     */
+    public function create(string $name, string $email): Model
+
+    // ✅ CORRECT - Full PHPDoc
+    /**
+     * Create new record.
+     *
+     * @param string $name Entity name
+     * @param string $email Entity email
+     * @return Model Created model
+     * @throws AppException If email already exists
+     */
+    public function create(string $name, string $email): Model
+    ```
+
 ### Service Interface
 
 - [ ] **Service has Interface**
@@ -560,4 +620,4 @@ Quick reference for available traits. See `quick-reference.md` Section 17 for de
 
 ---
 
-**Last Updated:** 2026-01-30
+**Last Updated:** 2026-03-21

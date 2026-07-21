@@ -97,11 +97,18 @@ interface WhatsappDeviceInterface
     /**
      * Get paginated list with filters.
      *
-     * @param array $filters
+     * ALL filters must be explicit parameters, NO array $filters
+     *
      * @param PaginationData $pagination
+     * @param string|null $search
+     * @param string|null $status
      * @return LengthAwarePaginator
      */
-    public function paginate(array $filters, PaginationData $pagination): LengthAwarePaginator;
+    public function paginate(
+        PaginationData $pagination,
+        ?string $search = null,
+        ?string $status = null
+    ): LengthAwarePaginator;
 
     /**
      * Find by ID or throw 404.
@@ -230,7 +237,7 @@ $user = $this->service->create(
 
 | Method | Purpose | Parameters | Returns |
 |--------|---------|------------|---------|
-| **paginate** | List with pagination | `array $filters`, `PaginationData $pagination` | `LengthAwarePaginator` |
+| **paginate** | List with pagination | `PaginationData $pagination`, explicit filter params (e.g., `?string $search`, `?string $status`) | `LengthAwarePaginator` |
 | **find** | Find by ID or throw 404 | `string $id` | `Model` |
 | **create** | Create new record | Named parameters (required + optional) | `Model` |
 | **update** | Update existing record | `string $id` + named parameters (nullable) | `Model` |
@@ -242,7 +249,11 @@ $user = $this->service->create(
 interface UserServiceInterface
 {
     // READ - List & pagination
-    public function paginate(array $filters, PaginationData $pagination): LengthAwarePaginator;
+    public function paginate(
+        PaginationData $pagination,
+        ?string $search = null,
+        ?string $status = null
+    ): LengthAwarePaginator;
 
     // READ - Single record
     public function find(string $id): User;
@@ -298,19 +309,27 @@ class WhatsappDeviceService implements WhatsappDeviceInterface
     use AppTransactional;
 
     /**
-     * {@inheritdoc}
+     * Get paginated list with filters.
+     *
+     * @param PaginationData $pagination Pagination data (page, per_page, sort, sort_by)
+     * @param string|null $search Search keyword
+     * @param string|null $status Filter by status
+     * @return LengthAwarePaginator Paginated result
      */
-    public function paginate(array $filters, PaginationData $pagination): LengthAwarePaginator
-    {
+    public function paginate(
+        PaginationData $pagination,
+        ?string $search = null,
+        ?string $status = null
+    ): LengthAwarePaginator {
         $query = WhatsappDevice::query();
 
-        // Apply filters
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', "%{$filters['search']}%");
+        // Apply filters using explicit parameters
+        if ($search !== null) {
+            $query->where('name', 'like', "%{$search}%");
         }
 
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if ($status !== null) {
+            $query->where('status', $status);
         }
 
         return AppQuery::paginate($query, $pagination);
@@ -319,7 +338,10 @@ class WhatsappDeviceService implements WhatsappDeviceInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Find by ID or throw 404.
+     *
+     * @param string $id Model ID
+     * @return WhatsappDevice Found model
      */
     public function find(string $id): WhatsappDevice
     {
@@ -327,7 +349,14 @@ class WhatsappDeviceService implements WhatsappDeviceInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Create new record.
+     *
+     * @param string $deviceId Device ID from WhatsApp
+     * @param string $name Device name
+     * @param string|null $phone Phone number (optional)
+     * @param bool $isActive Whether device is active
+     * @return WhatsappDevice Created model
+     * @throws AppException If device_id already exists
      */
     public function create(
         string $deviceId,
@@ -358,7 +387,14 @@ class WhatsappDeviceService implements WhatsappDeviceInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Update existing record.
+     *
+     * @param string $id Device ID
+     * @param string|null $name Device name
+     * @param string|null $phone Phone number
+     * @param bool|null $isActive Active status
+     * @return WhatsappDevice Updated model
+     * @throws AppException If validation fails
      */
     public function update(
         string $id,
@@ -396,7 +432,11 @@ class WhatsappDeviceService implements WhatsappDeviceInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Delete record.
+     *
+     * @param string $id Device ID
+     * @return WhatsappDevice Deleted model
+     * @throws AppException If device is connected
      */
     public function delete(string $id): WhatsappDevice
     {
@@ -436,10 +476,22 @@ class WhatsappDeviceService implements WhatsappDeviceInterface
 **READ Methods (NO requireTransaction):**
 ```php
 // ✅ CORRECT
-public function paginate(array $filters, PaginationData $pagination): LengthAwarePaginator
-{
+public function paginate(
+    PaginationData $pagination,
+    ?string $search = null,
+    ?string $status = null
+): LengthAwarePaginator {
     // NO requireTransaction()
     $query = Model::query();
+
+    if ($search !== null) {
+        $query->where('name', 'like', "%{$search}%");
+    }
+
+    if ($status !== null) {
+        $query->where('status', $status);
+    }
+
     return AppQuery::paginate($query, $pagination);
 }
 
@@ -513,9 +565,12 @@ class WhatsappDeviceController extends Controller
 
     public function index(WhatsappDeviceRequest $request): JsonResponse
     {
+        $filters = $request->input('filter', []);
+
         $items = $this->service->paginate(
-            filters: $request->input('filter', []),
-            pagination: $this->pagination($request)
+            pagination: $this->pagination($request),
+            search: $filters['search'] ?? null,
+            status: $filters['status'] ?? null
         );
 
         return AppResponse::success(
@@ -683,7 +738,11 @@ use Daniardev\LaravelTsd\Data\PaginationData;
 
 interface WhatsappDeviceInterface
 {
-    public function paginate(array $filters, PaginationData $pagination): LengthAwarePaginator;
+    public function paginate(
+        PaginationData $pagination,
+        ?string $search = null,
+        ?string $status = null
+    ): LengthAwarePaginator;
     public function find(string $id): WhatsappDevice;
 
     public function create(
@@ -954,4 +1013,4 @@ $this->service->create(
 
 ---
 
-**Last Updated:** 2026-01-29
+**Last Updated:** 2026-03-21

@@ -170,6 +170,8 @@ Follow this **exact learning sequence**:
    - patterns/reusable-relationships.md - Relationship patterns
    - patterns/livewire.md - Livewire 4 components
    - patterns/snapshot-pattern.md - Snapshot pattern
+   - patterns/app-has-images.md - Image upload management
+   - patterns/filament-resource.md - Filament v5 Resource pattern
 ```
 
 #### Step 6: Read Domain Examples (AS NEEDED)
@@ -245,6 +247,9 @@ HTTP Request → Controller → Service → Model → Database
 | patterns/model-retrieval.md | findOrFail vs find pattern |
 | patterns/reusable-relationships.md | Reusable relationship patterns |
 | patterns/livewire.md | Livewire 4 components and best practices |
+| patterns/app-has-images.md | Image upload management (AppHasImages trait) |
+| patterns/app-has-images-setup.md | MinIO/S3 setup guide for AppHasImages |
+| patterns/filament-resource.md | Filament v5 Resource pattern (admin panel) |
 
 ### Domain Examples (docs/domains/)
 
@@ -270,6 +275,7 @@ When user asks you to:
 - **"Create controller"** → Read ai/templates.md#controller-template
 - **"Create service"** → Read ai/templates.md#service-templates
 - **"Create Livewire component"** → Read patterns/livewire.md
+- **"Create Filament Resource"** → Read patterns/filament-resource.md
 - **"Code review"** → Read ai/checklist.md
 - **"Refactor code"** → Read ai/quick-reference.md + relevant pattern files
 - **"Fix this error"** → Check ai/checklist.md + relevant pattern files
@@ -381,5 +387,5 @@ Each domain includes:
 ---
 
 **Version:** 2.0 (Generic/Universal)
-**Last Updated:** 2026-02-23
+**Last Updated:** 2026-03-19
 **Maintained by:** Development Team

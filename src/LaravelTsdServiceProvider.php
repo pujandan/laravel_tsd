@@ -2,6 +2,7 @@
 
 namespace Daniardev\LaravelTsd;
 
+use Daniardev\LaravelTsd\Middleware\AppParseBoolAndNull;
 use Illuminate\Support\ServiceProvider;
 
 class LaravelTsdServiceProvider extends ServiceProvider
@@ -19,6 +20,9 @@ class LaravelTsdServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register middleware alias
+        $this->app['router']->aliasMiddleware('parse.bool', AppParseBoolAndNull::class);
+
         // Load TSD translations (tsd_message.php, tsd_label.php)
         $this->loadTranslations();
 

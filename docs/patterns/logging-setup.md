@@ -7,6 +7,7 @@ This guide explains how to properly configure logging for the Laravel TSD packag
 The Laravel TSD package uses a **`json-daily`** logging channel for:
 - **AppHandler** - Exception logging (401/403 security issues, 500+ system errors)
 - **AppSafe** - Silent execution failures (emails, external APIs, webhooks)
+- **AppLog** - Centralized logging helper for consistent log format
 
 Without proper configuration, these features will **not log anything**.
 
@@ -89,6 +90,169 @@ php artisan cache:clear
 
 ---
 
+## Using AppLog Helper
+
+The `AppLog` helper provides clean, consistent logging methods that automatically use the `json-daily` channel.
+
+### Basic Logging Methods
+
+```php
+use Daniardev\LaravelTsd\Helpers\AppLog;
+
+// Info level - for normal operations
+AppLog::info('User created account', [
+    'user_id' => $user->id,
+    'email' => AppLog::maskEmail($user->email),
+]);
+
+// Error level - for critical failures
+AppLog::error('Payment processing failed', [
+    'order_id' => $orderId,
+    'error' => $e->getMessage(),
+]);
+
+// Warning level - for recoverable issues
+AppLog::warning('Rate limit exceeded', [
+    'user_id' => $userId,
+    'attempts' => $attempts,
+]);
+
+// Debug level - for development troubleshooting
+AppLog::debug('AI response received', [
+    'tokens' => $tokens,
+    'time_ms' => $timeMs,
+]);
+```
+
+### Logging with Request Context
+
+For API endpoints or web requests, include request information:
+
+```php
+use Daniardev\LaravelTsd\Helpers\AppLog;
+
+AppLog::info('Email sent successfully', AppLog::getRequestContext(
+    request(),
+    [
+        'to' => AppLog::maskEmail($to),
+        'subject' => $subject,
+        'email_template' => 'welcome',
+    ]
+));
+```
+
+### Logging in Queue Jobs
+
+For background jobs, include job context:
+
+```php
+use Daniardev\LaravelTsd\Helpers\AppLog;
+
+class SendWelcomeEmailJob implements ShouldQueue
+{
+    public function handle()
+    {
+        try {
+            Mail::to($this->user)->send(new WelcomeEmail());
+
+            AppLog::info('Welcome email sent', array_merge(
+                AppLog::getJobContext($this->job),
+                [
+                    'user_id' => $this->user->id,
+                    'email' => AppLog::maskEmail($this->user->email),
+                ]
+            ));
+        } catch (\Exception $e) {
+            AppLog::error('Welcome email failed', array_merge(
+                AppLog::getJobContext($this->job),
+                [
+                    'user_id' => $this->user->id,
+                    'error' => $e->getMessage(),
+                ]
+            ));
+
+            throw $e;
+        }
+    }
+}
+```
+
+### Privacy Protection Helpers
+
+`AppLog` provides helper methods to protect sensitive data:
+
+```php
+use Daniardev\LaravelTsd\Helpers\AppLog;
+
+// Mask email (keep first 3 chars)
+AppLog::info('User login', [
+    'email' => AppLog::maskEmail('john.doe@example.com'),
+    // Output: "joh***@***"
+]);
+
+// Mask phone number (keep first 4 and last 4)
+AppLog::info('SMS sent', [
+    'phone' => AppLog::maskPhoneNumber('081234567890'),
+    // Output: "0812*****7890"
+]);
+
+// Sanitize URL (remove sensitive params)
+AppLog::info('API callback received', [
+    'url' => AppLog::sanitizeUrl($request->fullUrl()),
+    // Removes: api_token, access_token, password, secret
+]);
+
+// Sanitize stack trace (for debug mode only)
+if (config('app.debug')) {
+    AppLog::error('Database error', [
+        'trace' => AppLog::sanitizeTrace($e->getTraceAsString()),
+    ]);
+}
+```
+
+### Non-Critical Logging with AppSafe
+
+For logging that should NOT fail the main operation (e.g., external API failures):
+
+```php
+use Daniardev\LaravelTsd\Helpers\AppSafe;
+use Daniardev\LaravelTsd\Helpers\AppLog;
+
+// This will NEVER crash your application
+AppSafe::run('Send analytics event', function () use ($data) {
+    AppLog::info('Analytics event sent', [
+        'event' => $data['event'],
+        'user_id' => $data['user_id'],
+    ]);
+
+    // If this fails, it's logged as WARNING but execution continues
+    Http::post('https://analytics.example.com/track', $data);
+});
+```
+
+### Log Format
+
+All logs use consistent JSON format:
+
+```json
+{
+    "datetime": "2025-01-15T10:30:45.123456+00:00",
+    "message": "User created account",
+    "context": {
+        "user_id": 123,
+        "email": "joh***@***",
+        "request_id": "abc-123",
+        "ip": "192.168.1.1"
+    },
+    "level": 200,
+    "level_name": "INFO",
+    "channel": "json-daily",
+    "extra": {}
+}
+```
+
+---
+
 ## Verification
 
 ### Test Logging Manually
@@ -97,8 +261,8 @@ php artisan cache:clear
 # Open tinker
 php artisan tinker
 
-# Test logging
->>> app('log')->channel('json-daily')->info('Test log', ['test' => 'data']);
+# Test logging with AppLog
+>>> Daniardev\LaravelTsd\Helpers\AppLog::info('Test log', ['test' => 'data']);
 => true
 
 # Exit tinker
@@ -459,4 +623,4 @@ Consider using:
 
 ---
 
-**Last Updated:** 2025-01-15
+**Last Updated:** 2025-03-23

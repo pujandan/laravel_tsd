@@ -3,6 +3,7 @@
 namespace Daniardev\LaravelTsd\Helpers;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 /**
@@ -15,6 +16,66 @@ use Illuminate\Http\Request;
  */
 class AppLog
 {
+    /**
+     * Log info message to json-daily channel.
+     *
+     * @param  string  $message  Log message
+     * @param  array  $context  Additional context data
+     * @return void
+     *
+     * @example
+     * AppLog::info('User created', ['user_id' => $user->id, 'email' => AppLog::maskEmail($user->email)]);
+     */
+    public static function info(string $message, array $context = []): void
+    {
+        Log::channel('json-daily')->info($message, $context);
+    }
+
+    /**
+     * Log error message to json-daily channel.
+     *
+     * @param  string  $message  Log message
+     * @param  array  $context  Additional context data
+     * @return void
+     *
+     * @example
+     * AppLog::error('Payment failed', ['order_id' => $orderId, 'error' => $e->getMessage()]);
+     */
+    public static function error(string $message, array $context = []): void
+    {
+        Log::channel('json-daily')->error($message, $context);
+    }
+
+    /**
+     * Log warning message to json-daily channel.
+     *
+     * @param  string  $message  Log message
+     * @param  array  $context  Additional context data
+     * @return void
+     *
+     * @example
+     * AppLog::warning('Rate limit exceeded', ['user_id' => $userId, 'attempts' => $attempts]);
+     */
+    public static function warning(string $message, array $context = []): void
+    {
+        Log::channel('json-daily')->warning($message, $context);
+    }
+
+    /**
+     * Log debug message to json-daily channel.
+     *
+     * @param  string  $message  Log message
+     * @param  array  $context  Additional context data
+     * @return void
+     *
+     * @example
+     * AppLog::debug('AI response received', ['tokens' => $tokens, 'time_ms' => $timeMs]);
+     */
+    public static function debug(string $message, array $context = []): void
+    {
+        Log::channel('json-daily')->debug($message, $context);
+    }
+
     /**
      * Get user context for logging
      *
@@ -177,7 +238,7 @@ class AppLog
      *     AppLog::getJobContext($this->job),
      *     ['to' => $email, 'subject' => $subject]
      * );
-     * Log::channel('json-daily')->info('Email sent', $context);
+     * AppLog::info('Email sent', $context);
      */
     public static function getJobContext($job, array $extraContext = []): array
     {
@@ -201,7 +262,7 @@ class AppLog
      * @return array Request information with user details
      *
      * @example
-     * Log::channel('json-daily')->info('Email sent successfully', AppLog::getRequestContext(
+     * AppLog::info('Email sent successfully', AppLog::getRequestContext(
      *     request(),
      *     ['to' => AppLog::maskEmail($to), 'subject' => $subject]
      * ));

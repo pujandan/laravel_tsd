@@ -1920,7 +1920,192 @@ class UserFormRequest extends FormRequest
 }
 ```
 
-### 17.5 AppMigrationOrderScanner
+### 17.5 AppHasImages
+
+**Purpose:** Automatic image upload and storage management for models. Follows Youmrah pattern - URLs generated dynamically in Resources, NOT stored in database.
+
+**⚠️ CRITICAL PATTERN:**
+- **Database:** Only store `{field}_path` and `{field}_disk`
+- **Resource:** Generate `{field}_url` dynamically using `temporaryUrl()` for private files
+- **NEVER store URLs in database!**
+
+**Auto-managed fields per image:**
+- `{field}_path` - Storage path
+- `{field}_disk` - Disk name (files, private-files, local, public, s3, etc.)
+- `{field}_url` - Generated in Resource layer (NOT in database!)
+
+**Key Methods:**
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `uploadImage()` | `UploadedFile\|string $image` | `array{path, disk}` | Upload to 'image' field (default) |
+| `upload{Field}()` | `UploadedFile\|string $image` | `array{path, disk}` | Magic method for specific field (e.g., `uploadProfile()`) |
+| `uploadImageField()` | `string $field, $image` | `array{path, disk}` | Generic upload method |
+| `deleteImage()` | - | `bool` | Delete default 'image' |
+| `delete{Field}()` | - | `bool` | Magic method for specific field |
+| `deleteImageField()` | `string $field` | `bool` | Generic delete method |
+| `getImageFields()` | - | `array` | Get all image fields (default: `['image']`) |
+| `getImageDiskConfig()` | `string $field` | `array{disk, visibility, directory}` | Get storage config per field |
+| `getImageDirectory()` | `string $field` | `string` | Get directory path |
+| `getImagePath()` | `string $field` | `string\|null` | Get path for field |
+| `getImageDisk()` | `string $field` | `string\|null` | Get storage disk |
+
+**Features:**
+- ✅ Supports both multipart file upload AND base64 strings
+- ✅ Auto-deletes images when model is deleted
+- ✅ Configurable storage (S3, S3-private, local, etc.) per field
+- ✅ Public/private visibility control
+- ✅ Custom directory paths per field
+- ✅ Dynamic URL generation in Resource layer
+
+**Setup:**
+
+1. **Add trait to model:**
+```php
+use Daniardev\LaravelTsd\Traits\AppHasImages;
+
+class Boarding extends Model
+{
+    use AppHasImages; // Auto-manages: image_path, image_disk
+}
+```
+
+2. **Add fields to migration (NO url field!):**
+```php
+Schema::create('boardings', function (Blueprint $table) {
+    $table->uuid('id')->primary();
+    $table->string('title');
+
+    // Only path and disk - NO url field!
+    $table->string('image_path');
+    $table->string('image_disk')->nullable();
+
+    $table->timestamps(6);
+    $table->auditFields();
+});
+```
+
+3. **Use in controller:**
+```php
+// Create
+$item = new Boarding();
+$item->title = 'Welcome';
+$item->uploadImage($request->image); // Auto-sets path & storage!
+$item->save();
+
+// Update
+if ($request->has('image')) {
+    $item->uploadImage($request->image); // Auto-replaces old image
+}
+$item->save();
+
+// Delete (auto-deletes from storage too)
+$item->delete();
+```
+
+4. **Generate URL in Resource:**
+```php
+use Illuminate\Support\Facades\Storage;
+
+class BoardingResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+
+            // Storage fields from database
+            'image_path' => $this->image_path,
+            'image_disk' => $this->image_disk,
+
+            // URL generated dynamically
+            'image_url' => $this->when(
+                $this->image_path && $this->image_disk,
+                fn() => $this->getImageUrl()
+            ),
+        ];
+    }
+
+    protected function getImageUrl(): string
+    {
+        // S3/S3-private/MinIO - temporary URL with token
+        if (method_exists(Storage::disk($this->image_disk), 'temporaryUrl')) {
+            return Storage::disk($this->image_disk)->temporaryUrl(
+                $this->image_path,
+                now()->addMinutes(30)
+            );
+        }
+
+        // Local/public disks - direct URL
+        return Storage::disk($this->image_disk)->url($this->image_path);
+    }
+}
+```
+
+**Multiple Images Example:**
+```php
+class User extends Model
+{
+    use AppHasImages;
+
+    public function getImageFields(): array
+    {
+        return ['image', 'profile', 'thumbnail'];
+    }
+}
+
+// Controller
+$user->uploadImage($avatar);      // → image_path, image_disk
+$user->uploadProfile($profile);   // → profile_path, profile_disk
+$user->uploadThumbnail($thumb);   // → thumbnail_path, thumbnail_disk
+```
+
+**Custom Storage Config (Using Enums):**
+```php
+use Daniardev\LaravelTsd\Enums\Disk;
+use App\Enums\Directory; // Your project's directory enum
+
+public function getImageDiskConfig(string $field = 'image'): array
+{
+    return [
+        'disk' => Disk::FILES,             // Direct (no ->value needed!)
+        'directory' => Directory::BOARDINGS, // Direct too!
+        // Visibility auto-detected from disk config!
+        // - Disk::FILES, Disk::S3, Disk::PUBLIC → public
+        // - Disk::PRIVATE_FILES → private
+    ];
+}
+```
+
+**Note:** Both disk and directory can use enum directly OR with `->value`:
+- `Disk::FILES` or `Disk::FILES->value` ✅
+- `Directory::BOARDINGS` or `Directory::BOARDINGS->value` ✅
+- `'files'` or `'boardings'` (plain strings) ✅
+
+**Available Disk Options:**
+
+| Disk | Type | Visibility | Description |
+|------|------|------------|-------------|
+| `Disk::FILES` | MinIO/S3 | Public | Bucket: `files` |
+| `Disk::PRIVATE_FILES` | MinIO/S3 | Private | Bucket: `private-files` |
+| `Disk::S3` | MinIO/S3 | Public | Bucket: from `AWS_BUCKET` |
+| `Disk::LOCAL` | Local | Private | Path: `storage/app/private` |
+| `Disk::PUBLIC` | Local | Public | Path: `storage/app/public` |
+
+**Disk Enum Helper Methods:**
+```php
+Disk::FILES->isPublic();           // true
+Disk::FILES->isPrivate();          // false
+Disk::FILES->isS3Based();          // true (MinIO/S3)
+Disk::FILES->isLocalBased();       // false
+Disk::FILES->bucket();             // 'files'
+Disk::FILES->visibility();         // 'public'
+```
+
+**📘 Full Documentation:** `/docs/patterns/app-has-images.md`
+
+### 17.6 AppMigrationOrderScanner
 
 Migration execution order control.
 
@@ -1948,5 +2133,5 @@ Migration execution order control.
 
 ---
 
-**Last Updated:** 2026-02-24
+**Last Updated:** 2026-03-19
 **Version:** 2.0 (Generic/Universal)
