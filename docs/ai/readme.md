@@ -2,18 +2,19 @@
 
 This folder contains AI-optimized documentation for coding assistance in Laravel applications using the laravel_tsd package.
 
----
+> **⚡ IMPORTANT:** Ketika user meminta membuat fitur "sesuai pattern laravel_tsd", baca [`../AI_INSTRUCTIONS.md`](../AI_INSTRUCTIONS.md) dulu untuk instruksi lengkap.
 
-## 📚 File Guide
+---
 
 ### Reading Order for AI Assistant
 
 When user asks you to "pelajari docs" or "learn the codebase":
 
 1. **Start with:** `../README.md` (Main documentation entry)
-2. **Then read:** `quick-reference.md` (All rules in detail)
-3. **Use:** `templates.md` (When creating code)
-4. **Validate:** `checklist.md` (Before committing)
+2. **Then read:** `quick-reference.md` (All rules in detail - 17 sections)
+3. **Then read:** `api-guide.md` (API CRUD template + pattern)
+4. **Use:** `templates.md` (When creating code with AppHasImages or need examples)
+5. **Validate:** `checklist.md` (Before committing)
 
 ---
 
@@ -75,7 +76,55 @@ When user asks you to "pelajari docs" or "learn the codebase":
 
 ---
 
-### 3. checklist.md
+### 3. api-guide.md
+
+**Purpose:** Complete API CRUD implementation guide
+
+**Contains:**
+- File structure overview
+- Basic templates for 7 files (Controller, Interface, Service, Request x2, Resource x2)
+- Pattern & conventions (transaction, named parameters, response format)
+- Helper classes reference from laravel-tsd
+- Route definition
+- Pre-commit checklist
+
+**When to read:**
+- When creating new CRUD API
+- When learning laravel-tsd pattern
+- When need quick reference for API implementation
+
+**How to use:**
+1. Copy templates for each layer
+2. Replace placeholders ({Entity}, {Module})
+3. Follow patterns & conventions
+4. Use helper classes from package
+5. Validate with checklist
+
+---
+
+### 4. templates.md
+
+**Purpose:** Advanced templates with domain examples
+
+**Contains:**
+- AppHasImages template (image upload pattern)
+- Domain examples (E-commerce, HR, User)
+- Template customization guide
+- Model with image fields
+
+**When to read:**
+- When entity has image upload (use AppHasImages)
+- When need domain-specific examples
+- When need AppHasImages pattern
+
+**How to use:**
+1. Reference AppHasImages section for image upload
+2. Check domain examples for patterns
+3. Customize templates as needed
+
+---
+
+### 5. checklist.md
 
 **Purpose:** Validation checklist for code quality
 
@@ -105,52 +154,65 @@ When user asks you to "pelajari docs" or "learn the codebase":
 ### Task 1: Create New CRUD Feature
 
 **Files to read:**
-1. `../crud_template.md` (CRUD overview)
-2. `templates.md` (Implementation templates)
-3. `quick-reference.md` (Rules reference)
+1. `api-guide.md` (Complete guide + templates)
+2. `quick-reference.md` (Rules reference)
+3. `checklist.md` (Validation)
 
 **Process:**
 1. Read naming rules from `quick-reference.md`
-2. Copy controller template from `templates.md`
-3. Copy service interface template from `templates.md`
-4. Copy service implementation template from `templates.md`
-5. Copy model template from `templates.md`
-6. Copy request templates from `templates.md`
-7. Copy resource templates from `templates.md`
-8. Validate with `checklist.md`
+2. Copy templates from `api-guide.md` (7 files)
+3. Customize business logic
+4. Validate with `checklist.md`
 
 ---
 
-### Task 2: Create Controller Only
+### Task 2: Create CRUD with Image Upload
+
+**Files to read:**
+1. `api-guide.md` (Basic templates)
+2. `templates.md` (AppHasImages section)
+3. `../patterns/app-has-images.md` (Detailed pattern)
+4. `checklist.md` (Validation)
+
+**Process:**
+1. Copy basic templates from `api-guide.md`
+2. Add AppHasImages trait to model
+3. Add image upload to controller/service
+4. Generate URL dynamically in resource
+5. Validate with `checklist.md`
+
+---
+
+### Task 3: Create Controller Only
 
 **Files to read:**
 1. `quick-reference.md` (section: Controller Rules)
-2. `templates.md` (section: Controller Template)
+2. `api-guide.md` (Controller template)
 
 **Process:**
 1. Check controller rules in `quick-reference.md`
-2. Copy controller template
+2. Copy controller template from `api-guide.md`
 3. Ensure all methods follow patterns
 4. Validate with `checklist.md` (Controller section)
 
 ---
 
-### Task 3: Create Service Only
+### Task 4: Create Service Only
 
 **Files to read:**
 1. `quick-reference.md` (section: Service Rules)
-2. `templates.md` (section: Service Templates)
+2. `api-guide.md` (Service templates)
 
 **Process:**
 1. Check service rules in `quick-reference.md`
-2. Copy service interface template
-3. Copy service implementation template
+2. Copy service interface template from `api-guide.md`
+3. Copy service implementation template from `api-guide.md`
 4. Ensure all methods follow patterns
 5. Validate with `checklist.md` (Service section)
 
 ---
 
-### Task 4: Code Review
+### Task 5: Code Review
 
 **Files to read:**
 1. `checklist.md` (Primary reference)
@@ -164,7 +226,7 @@ When user asks you to "pelajari docs" or "learn the codebase":
 
 ---
 
-### Task 5: Fix Error or Bug
+### Task 6: Fix Error or Bug
 
 **Files to read:**
 1. `checklist.md` (Check violations)

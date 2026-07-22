@@ -4,7 +4,9 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/daniardev/laravel-tsd.svg?style=flat-square)](https://packagist.org/packages/daniardev/laravel-tsd)
 [![License](https://img.shields.io/packagist/l/daniardev/laravel-tsd.svg?style=flat-square)](https://packagist.org/packages/daniardev/laravel-tsd)
 
-Laravel TSD Package provides **Traits, Services, Data classes** for Laravel applications following **Service Layer Pattern**.
+Laravel TSD Package provides **Traits, Services, Data classes, Resources** for Laravel applications following **Service Layer Pattern**.
+
+> **🤖 For AI Agent:** Ketika user meminta membuat fitur "sesuai pattern laravel_tsd", baca [`AI_INSTRUCTIONS.md`](AI_INSTRUCTIONS.md) dulu.
 
 ## Installation
 
@@ -174,8 +176,56 @@ cat storage/logs/laravel-$(date +%Y-%m-%d).log
 **Start here:** `docs/laravel-tsd/ai/quick-reference.md` - Complete coding rules
 
 **Then read:**
-- `docs/laravel-tsd/ai/templates.md` - Implementation templates
+- `docs/laravel-tsd/ai/api-guide.md` - ⭐ **API CRUD guide** (template + pattern)
+- `docs/laravel-tsd/ai/templates.md` - Domain examples & AppHasImages template
 - `docs/laravel-tsd/ai/checklist.md` - Pre-commit validation
+
+---
+
+## 🤖 Using with AI Agent (Claude, ChatGPT, etc.)
+
+### Quick Start dengan AI
+
+Untuk membuat fitur/menu baru dengan bantuan AI:
+
+**1. Publish documentation & AI instructions:**
+```bash
+php artisan vendor:publish --tag=laravel-tsd-docs
+```
+
+**2. Berikan instruksi ke AI:**
+```
+Buatkan menu [nama menu] untuk modul [nama modul] sesuai pattern laravel_tsd.
+
+Fields:
+- field1: string
+- field2: integer
+- image: upload (optional)
+```
+
+**3. AI akan otomatis:**
+- Membaca `AI_INSTRUCTIONS_LARAVEL_TSD.md` 
+- Mempelajari semua pattern dari package
+- Membuat 7 files lengkap (Controller, Interface, Service, Request x2, Resource x2)
+- Sesuai standard laravel-tsd
+
+### Apa yang AI Dapatkan dari Package?
+
+| Fitur | Dari Package |
+|-------|--------------|
+| Helper Classes | AppResponse, AppQuery, AppRequest, AppResource, AppHelper, AppSafe, dll |
+| Traits | AppTransactional, AppPagination, AppRequestTrait, AppAuditable, AppHasImages |
+| Data Classes | PaginationData |
+| Exceptions | AppException, AppHandler |
+| Resources | AuditResource (reusable audit info) |
+| Logging | AppLog, AppLogFormatJson |
+| Mail | EmailService, MailtrapService, SendEmailJob, BaseMailable |
+| Enums | Disk (storage enum) |
+| Middleware | AppParseBoolAndNull (boolean normalization) |
+| Database Macros | auditFields(), auditFieldsSafe() |
+| Patterns | Service Layer, Transaction, Error Handling, API Standard |
+
+**Lihat [`AI_INSTRUCTIONS.md`](AI_INSTRUCTIONS.md) untuk instruksi lengkap ke AI.**
 
 ## What's Included
 
@@ -219,6 +269,9 @@ cat storage/logs/laravel-$(date +%Y-%m-%d).log
 
 ### Data (1)
 - **PaginationData** - Pagination DTO
+
+### Resources (1)
+- **AuditResource** - Reusable audit information (created, updated, deleted)
 
 ### Enums (1)
 - **Disk** - Storage disk enum untuk file/image management
@@ -320,6 +373,7 @@ Schema::create('users', function (Blueprint $table) {
 | **[docs/patterns/logging-setup.md](docs/patterns/logging-setup.md)** | 🔧 **REQUIRED** - Logging configuration guide |
 | **[docs/ai/templates.md](docs/ai/templates.md)** | Code templates for all components |
 | **[docs/ai/checklist.md](docs/ai/checklist.md)** | Pre-commit validation checklist |
+| **[docs/ai/api-standard.md](docs/ai/api-standard.md)** | ⭐ **API CRUD** - Complete API pattern (7 files) |
 | **[docs/patterns/service-layer.md](docs/patterns/service-layer.md)** | Service layer pattern details |
 | **[docs/patterns/database-transaction.md](docs/patterns/database-transaction.md)** | Transaction pattern details |
 | **[docs/patterns/error-handling.md](docs/patterns/error-handling.md)** | Exception handling guide |

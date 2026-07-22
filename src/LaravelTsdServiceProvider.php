@@ -53,6 +53,7 @@ class LaravelTsdServiceProvider extends ServiceProvider
         // Publish documentation
         $this->publishes([
             __DIR__ . '/../docs' => base_path('docs/laravel-tsd'),
+            __DIR__ . '/../AI_INSTRUCTIONS.md' => base_path('AI_INSTRUCTIONS_LARAVEL_TSD.md'),
         ], 'laravel-tsd-docs');
     }
 

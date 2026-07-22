@@ -1870,6 +1870,54 @@ public function getImageDiskConfig(string $field = 'image'): array
 
 *Lihat [`docs/patterns/app-has-images.md`](../patterns/app-has-images.md) untuk detail.*
 
+### 16.13 AuditResource
+
+Reusable resource untuk audit information (created, updated, deleted). Digunakan bersama `AppAuditable` trait.
+
+| Format | Field | Source |
+|--------|-------|--------|
+| `created.at` | `created_at` | Laravel timestamp |
+| `created.by` | `creator_name` | AppAuditable accessor |
+| `created.by_id` | `created_by` | AppAuditable field |
+| `updated.at` | `updated_at` | Laravel timestamp |
+| `updated.by` | `updater_name` | AppAuditable accessor |
+| `updated.by_id` | `updated_by` | AppAuditable field |
+| `deleted.*` | `deleted_at`, `deleter_name`, `deleted_by` | AppAuditable (softDeletes only) |
+
+**Usage di Resource:**
+```php
+use Daniardev\LaravelTsd\Resources\Api\AuditResource;
+
+public function toArray(Request $request): array
+{
+    return [
+        'id' => $this->id,
+        'name' => $this->name,
+
+        // Audit information
+        'audit' => AuditResource::make($this->resource)->toArray($request),
+    ];
+}
+```
+
+**Output:**
+```json
+{
+  "audit": {
+    "created": {
+      "at": "2024-01-15 10:30:00",
+      "by": "John Doe",
+      "by_id": "uuid-123"
+    },
+    "updated": {
+      "at": "2024-01-16 14:20:00",
+      "by": "Jane Smith",
+      "by_id": "uuid-456"
+    }
+  }
+}
+```
+
 ---
 
 ## 17. Trait Reference

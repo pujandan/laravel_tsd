@@ -2,6 +2,8 @@
 
 Welcome to the universal Laravel documentation. This guide provides AI assistants with comprehensive coding standards and patterns for Laravel development using this architecture.
 
+> **⚡ Quick Start for AI:** Lihat [`/AI_INSTRUCTIONS.md`](../AI_INSTRUCTIONS.md) untuk instruksi lengkap ketika user meminta membuat fitur sesuai pattern laravel-tsd.
+
 > **Note:** This documentation is designed to be **project-agnostic** and can be used across different Laravel projects. For domain-specific examples, see the [domains](./domains/) directory.
 
 ---
@@ -13,19 +15,20 @@ Welcome to the universal Laravel documentation. This guide provides AI assistant
 | Step | File to Read | Purpose | Mandatory? |
 |------|-------------|---------|------------|
 | 1 | `/docs/readme.md` | Architecture overview & structure | ✅ YES |
-| 2 | `/docs/ai/quick-reference.md` | ALL coding rules (15 sections) | ✅ YES |
-| 3 | `/docs/ai/templates.md` | Implementation templates | ✅ YES |
-| 4 | `/docs/ai/checklist.md` | Validation checklist | ✅ YES |
-| 5 | `/docs/patterns/*.md` | Deep dive patterns (9 files) | ⏸️ As needed |
-| 6 | `/docs/domains/*/readme.md` | Domain examples (4 domains) | ⏸️ As needed |
+| 2 | `/docs/ai/quick-reference.md` | ALL coding rules (17 sections) | ✅ YES |
+| 3 | `/docs/ai/api-guide.md` | API CRUD template + pattern | ✅ YES |
+| 4 | `/docs/ai/templates.md` | Domain examples & AppHasImages | ✅ YES |
+| 5 | `/docs/ai/checklist.md` | Validation checklist | ✅ YES |
+| 6 | `/docs/patterns/*.md` | Deep dive patterns (12 files) | ⏸️ As needed |
+| 7 | `/docs/domains/*/readme.md` | Domain examples (4 domains) | ⏸️ As needed |
 
-**After Steps 1-4, confirm with:**
+**After Steps 1-5, confirm with:**
 ```
 ✅ Saya sudah mempelajari dokumentasi Laravel AI:
 - Architecture: Service Layer Pattern (Controller → Service → Model)
 - Critical rules: Interface mandatory, DB::transaction, AppResponse::success(JsonResource, message)
-- Core docs: /docs/readme.md, /docs/ai/quick-reference.md, /docs/ai/templates.md, /docs/ai/checklist.md
-- Patterns: /docs/patterns/ (9 files)
+- Core docs: /docs/readme.md, /docs/ai/quick-reference.md, /docs/ai/api-guide.md, /docs/ai/templates.md, /docs/ai/checklist.md
+- Patterns: /docs/patterns/ (12 files)
 - Domains: /docs/domains/ (4 domains)
 
 Siap menerima tugas coding!
@@ -134,21 +137,28 @@ Follow this **exact learning sequence**:
    - Safe execution (Section 15)
 ```
 
-#### Step 3: Read Templates (MANDATORY)
+#### Step 3: Read API Guide (MANDATORY)
 ```
-3. Read /docs/ai/templates.md - ALL templates
-   - Controller template
-   - Service interface template
-   - Service implementation template
-   - Model template
-   - Request templates
-   - Resource templates
-   - Migration template
+3. Read /docs/ai/api-guide.md - COMPLETE guide
+   - Template dasar 7 files CRUD
+   - Named parameters pattern
+   - Transaction handling
+   - Response format
+   - Helper classes reference
+   - Checklist
 ```
 
-#### Step 4: Read Validation Guide (MANDATORY)
+#### Step 4: Read Templates (OPSIONAL - untuk AppHasImages)
 ```
-4. Read /docs/ai/checklist.md - ALL sections
+4. Read /docs/ai/templates.md - AS NEEDED
+   - AppHasImages template (untuk image upload)
+   - Domain examples (E-commerce, HR, User)
+   - Model dengan image fields
+```
+
+#### Step 5: Read Validation Guide (MANDATORY)
+```
+5. Read /docs/ai/checklist.md - ALL sections
    - Service layer checklist
    - Controller checklist
    - Model checklist
@@ -158,25 +168,27 @@ Follow this **exact learning sequence**:
    - Common mistakes
 ```
 
-#### Step 5: Read Pattern Documentation (AS NEEDED)
+#### Step 6: Read Pattern Documentation (AS NEEDED)
 ```
-5. Read /docs/patterns/ ONLY when deep understanding needed:
+6. Read /docs/patterns/ ONLY when deep understanding needed:
    - patterns/service-layer.md - Service layer details
    - patterns/database-transaction.md - Transaction pattern
+   - patterns/database-macros.md - AuditFields macro
    - patterns/error-handling.md - Exception handling
    - patterns/safe-execution.md - AppSafe helper
    - patterns/enum-pattern.md - Enum usage
    - patterns/model-retrieval.md - findOrFail vs find
    - patterns/reusable-relationships.md - Relationship patterns
    - patterns/livewire.md - Livewire 4 components
-   - patterns/snapshot-pattern.md - Snapshot pattern
+   - patterns/middleware.md - Boolean/null middleware
+   - patterns/email-service.md - Email service pattern
    - patterns/app-has-images.md - Image upload management
    - patterns/filament-resource.md - Filament v5 Resource pattern
 ```
 
-#### Step 6: Read Domain Examples (AS NEEDED)
+#### Step 7: Read Domain Examples (AS NEEDED)
 ```
-6. Read /docs/domains/ ONLY when working on specific domain:
+7. Read /docs/domains/ ONLY when working on specific domain:
    - domains/ecommerce/readme.md - E-commerce examples
    - domains/hr/readme.md - HR/Workforce examples
    - domains/tourism/readme.md - Tourism examples
