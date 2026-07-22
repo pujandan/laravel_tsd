@@ -29,8 +29,6 @@ class SendEmailJob implements ShouldQueue
     public function __construct(array $emailData)
     {
         $this->emailData = $emailData;
-
-        $this->onQueue('email');
     }
 
     public function handle(EmailInterface $emailService): void

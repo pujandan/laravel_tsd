@@ -1833,6 +1833,43 @@ Schema::create('users', function (Blueprint $table) {
 });
 ```
 
+### 16.12 Disk Enum
+
+Storage disk enum untuk image/file management. Digunakan oleh `AppHasImages` trait.
+
+| Cases | Value | Type | Visibility | Description |
+|-------|-------|------|------------|-------------|
+| `LOCAL` | `'local'` | Local | Private | `storage/app/private` |
+| `PUBLIC` | `'public'` | Local | Public | `storage/app/public` |
+| `S3` | `'s3'` | S3/MinIO | Public | AWS_BUCKET dari config |
+| `FILES` | `'files'` | S3/MinIO | Public | Bucket: `files` |
+| `PRIVATE_FILES` | `'private-files'` | S3/MinIO | Private | Bucket: `private-files` |
+
+**Helper Methods:**
+```php
+Disk::FILES->isPublic();        // true
+Disk::FILES->isPrivate();       // false
+Disk::FILES->isS3Based();       // true
+Disk::FILES->isLocalBased();    // false
+Disk::FILES->bucket();          // 'files'
+Disk::FILES->visibility();      // 'public'
+```
+
+**Usage di AppHasImages:**
+```php
+use Daniardev\LaravelTsd\Enums\Disk;
+
+public function getImageDiskConfig(string $field = 'image'): array
+{
+    return [
+        'disk' => Disk::FILES,        // Direct enum (no ->value needed)
+        'directory' => 'boardings',
+    ];
+}
+```
+
+*Lihat [`docs/patterns/app-has-images.md`](../patterns/app-has-images.md) untuk detail.*
+
 ---
 
 ## 17. Trait Reference

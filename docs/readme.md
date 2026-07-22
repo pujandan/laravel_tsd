@@ -241,6 +241,7 @@ HTTP Request → Controller → Service → Model → Database
 |------|----------------|
 | patterns/service-layer.md | Service layer pattern, interfaces, traits |
 | patterns/database-transaction.md | Transaction pattern, AppTransactional trait |
+| patterns/database-macros.md | Database Blueprint macros (auditFields, auditFieldsSafe) |
 | patterns/error-handling.md | Exception handling, logging philosophy |
 | patterns/safe-execution.md | AppSafe helper for silent failures (emails, webhooks, etc.) |
 | patterns/enum-pattern.md | Enum usage and best practices |
@@ -252,6 +253,7 @@ HTTP Request → Controller → Service → Model → Database
 | patterns/app-has-images-setup.md | MinIO/S3 setup guide for AppHasImages |
 | patterns/filament-resource.md | Filament v5 Resource pattern (admin panel) |
 | patterns/email-service.md | Email service dengan queue, retry, multi-driver (SMTP/Mailtrap) |
+| patterns/middleware.md | Middleware pattern (AppParseBoolAndNull untuk normalisasi boolean) |
 
 ### Domain Examples (docs/domains/)
 

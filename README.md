@@ -184,7 +184,7 @@ cat storage/logs/laravel-$(date +%Y-%m-%d).log
 - **AppAuditable** - Audit trail (created_by, updated_by, deleted_by)
 - **AppPagination** - Pagination data extraction
 - **AppRequestTrait** - Custom validation error handling
-- **AppMigrationOrderScanner** - Migration execution order
+- **AppHasImages** - Image upload management with auto-S3/MinIO storage
 
 ### Helpers (11)
 - **AppResponse** - JSON response (success, error, print, selection)
@@ -220,9 +220,18 @@ cat storage/logs/laravel-$(date +%Y-%m-%d).log
 ### Data (1)
 - **PaginationData** - Pagination DTO
 
+### Enums (1)
+- **Disk** - Storage disk enum untuk file/image management
+
+### Middleware (1)
+- **AppParseBoolAndNull** - Normalisasi boolean/null dari frontend ke Laravel format
+
+### Providers
+- **MacroServiceProvider** - Register auditFields() Blueprint macro
+
 ### Database Macros
 - **auditFields()** - Add audit columns with foreign keys
-- **auditFieldsSafe()** - Add audit columns without foreign keys
+- **auditFieldsSafe()** - Add audit columns to existing tables safely
 
 ## Quick Example
 
@@ -316,6 +325,8 @@ Schema::create('users', function (Blueprint $table) {
 | **[docs/patterns/error-handling.md](docs/patterns/error-handling.md)** | Exception handling guide |
 | **[docs/patterns/safe-execution.md](docs/patterns/safe-execution.md)** | AppSafe usage guide |
 | **[docs/patterns/email-service.md](docs/patterns/email-service.md)** | Email service dengan queue & multi-driver |
+| **[docs/patterns/database-macros.md](docs/patterns/database-macros.md)** | Database auditFields macro |
+| **[docs/patterns/middleware.md](docs/patterns/middleware.md)** | Middleware untuk normalisasi boolean/null |
 
 ## Key Patterns
 
