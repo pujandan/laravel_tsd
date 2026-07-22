@@ -247,9 +247,11 @@ HTTP Request → Controller → Service → Model → Database
 | patterns/model-retrieval.md | findOrFail vs find pattern |
 | patterns/reusable-relationships.md | Reusable relationship patterns |
 | patterns/livewire.md | Livewire 4 components and best practices |
+| patterns/snapshot-pattern.md | Snapshot pattern |
 | patterns/app-has-images.md | Image upload management (AppHasImages trait) |
 | patterns/app-has-images-setup.md | MinIO/S3 setup guide for AppHasImages |
 | patterns/filament-resource.md | Filament v5 Resource pattern (admin panel) |
+| patterns/email-service.md | Email service dengan queue, retry, multi-driver (SMTP/Mailtrap) |
 
 ### Domain Examples (docs/domains/)
 
