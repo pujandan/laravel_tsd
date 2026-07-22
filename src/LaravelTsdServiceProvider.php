@@ -3,6 +3,9 @@
 namespace Daniardev\LaravelTsd;
 
 use Daniardev\LaravelTsd\Middleware\AppParseBoolAndNull;
+use Daniardev\LaravelTsd\Services\EmailInterface;
+use Daniardev\LaravelTsd\Services\EmailService;
+use Daniardev\LaravelTsd\Services\MailtrapService;
 use Illuminate\Support\ServiceProvider;
 
 class LaravelTsdServiceProvider extends ServiceProvider
@@ -12,7 +15,23 @@ class LaravelTsdServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Merge config
+        $this->mergeConfigFrom(
+            __DIR__ . '/../config/laravel-tsd.php',
+            'laravel-tsd'
+        );
+
+        // Register email services
+        $this->app->bind(EmailInterface::class, function ($app) {
+            $mode = config('laravel-tsd.mail.mode', 'mailtrap');
+
+            return $mode === 'mailtrap'
+                ? new MailtrapService()
+                : new EmailService();
+        });
+
+        $this->app->singleton(EmailService::class);
+        $this->app->singleton(MailtrapService::class);
     }
 
     /**
@@ -26,15 +45,15 @@ class LaravelTsdServiceProvider extends ServiceProvider
         // Load TSD translations (tsd_message.php, tsd_label.php)
         $this->loadTranslations();
 
+        // Publish config
+        $this->publishes([
+            __DIR__ . '/../config/laravel-tsd.php' => config_path('laravel-tsd.php'),
+        ], 'laravel-tsd-config');
+
         // Publish documentation
         $this->publishes([
             __DIR__ . '/../docs' => base_path('docs/laravel-tsd'),
         ], 'laravel-tsd-docs');
-
-        // Publish config if needed in the future
-        // $this->publishes([
-        //     __DIR__ . '/../config/laravel-tsd.php' => config_path('laravel-tsd.php'),
-        // ], 'laravel-tsd-config');
     }
 
     /**

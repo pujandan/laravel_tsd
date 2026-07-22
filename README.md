@@ -199,6 +199,17 @@ cat storage/logs/laravel-$(date +%Y-%m-%d).log
 - **AppSecure** - Encryption/decryption
 - **AppMigration** - Migration helper
 
+### Services (2)
+- **EmailService** - Email dengan SMTP (Laravel default Mail)
+- **MailtrapService** - Email dengan Mailtrap API
+
+### Mail
+- **BaseMailable** - Base class untuk mailable
+- **SendEmailJob** - Queue job untuk mengirim email
+
+### Interfaces (1)
+- **EmailInterface** - Interface untuk email service
+
 ### Logging (1)
 - **AppLogFormatJson** - JSON log formatter with datetime at top & pretty print (non-production)
 
@@ -304,6 +315,7 @@ Schema::create('users', function (Blueprint $table) {
 | **[docs/patterns/database-transaction.md](docs/patterns/database-transaction.md)** | Transaction pattern details |
 | **[docs/patterns/error-handling.md](docs/patterns/error-handling.md)** | Exception handling guide |
 | **[docs/patterns/safe-execution.md](docs/patterns/safe-execution.md)** | AppSafe usage guide |
+| **[docs/patterns/email-service.md](docs/patterns/email-service.md)** | Email service dengan queue & multi-driver |
 
 ## Key Patterns
 
