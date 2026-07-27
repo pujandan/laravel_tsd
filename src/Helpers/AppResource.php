@@ -10,7 +10,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
  */
 class AppResource
 {
-    public static function pagination(ResourceCollection $data) : array
+    public static function pagination(ResourceCollection $data): array
     {
         return [
             // request
@@ -22,8 +22,8 @@ class AppResource
             'count' => $data->count(), // count in page and size
             'total' => $data->total(), // total items
             // pages
-            'pageLast' => $data->lastPage(),
-            'pageMore' => $data->hasMorePages(),
+            'page_last' => $data->lastPage(),
+            'page_more' => $data->hasMorePages(),
         ];
     }
 

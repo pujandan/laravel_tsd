@@ -337,7 +337,7 @@ Use this checklist when creating or modifying resource classes.
 - [ ] **AppResource::pagination() is used**
   - `'pagination' => AppResource::pagination($this)`
   - Consistent pagination format across all collections
-  - Returns: page, size, from, to, count, total, pageLast, pageMore
+  - Returns: page, size, from, to, count, total, page_last, page_more
 
 - [ ] **Type hint toArray() method**
   - `public function toArray(Request $request): array`
@@ -569,7 +569,7 @@ Quick reference for available helper methods. See `quick-reference.md` Section 1
 - `print($message, $data)` - Simple print response
 
 ### AppHelper (Utilities)
-- `toCamelCase()` / `toSnakeCase()` - Case conversion
+- `enumCasesToString()` - Enum to string for validation
 - `formatCurrency()` / `formatDate()` - Formatting
 - `toBoolean()` / `ifNull()` - Type conversion
 - `arrayMerge()` - Array merging

@@ -844,7 +844,7 @@ class UserCollection extends ResourceCollection
    - Each item must go through Resource's `toArray()` method
 
 2. **MUST use AppResource::pagination()**: Helper for consistent pagination format
-   - Returns: page, size, from, to, count, total, pageLast, pageMore
+   - Returns: page, size, from, to, count, total, page_last, page_more
    - Consistent format across all collections
 
 3. **Type hint toArray()**: Always use `Request $request` not just `$request`
@@ -1730,11 +1730,10 @@ Utility helper with common functions.
 
 | Method | Description |
 |--------|-------------|
-| `toSnakeCase(array $data)` | Convert array keys to snake_case |
-| `toCamelCase(array $data)` | Convert array keys to camelCase |
-| `isCamel(?string $value)` | Check if string is camelCase |
-| `toBoolean($value)` | Convert value to boolean |
+| `enumCasesToString(string $enumClass)` | Convert enum cases to comma-separated string |
 | `formatCurrency(?float $amount, ...)` | Format currency |
+| `formatDate($date, $format)` | Format date |
+| `toBoolean($value)` | Convert value to boolean |
 | `formatDate($date, $format)` | Format date |
 | `arrayMerge(...$arrays)` | Merge arrays |
 | `ifNull($data, $replace)` | Null coalesce |

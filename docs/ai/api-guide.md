@@ -437,7 +437,7 @@ class {Entity}Resource extends JsonResource
             'audit' => AuditResource::make($this->resource)->toArray($request),
         ];
 
-        return AppHelper::toCamelCase($data);
+        return $data;
     }
 }
 ```
@@ -615,7 +615,7 @@ Untuk entity dengan image upload, gunakan pattern di: [`../patterns/app-has-imag
 | `AppResponse` | Response JSON (success, error) |
 | `AppQuery` | Pagination dengan security |
 | `AppRequest` | Pagination validation rules |
-| `AppHelper` | toCamelCase(), enumCasesToString() |
+| `AppHelper` | enumCasesToString(), formatCurrency(), formatDate() |
 | `AppResource` | Pagination metadata di Collection |
 | `AppPagination` | Extract pagination dari request |
 | `AppTransactional` | requireTransaction() di Service |

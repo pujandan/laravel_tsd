@@ -14,6 +14,9 @@ class MailtrapService implements EmailInterface
 {
     private string $apiKey;
 
+    /**
+     * @throws AppException
+     */
     public function __construct()
     {
         $this->apiKey = config('laravel-tsd.mail.mailtrap.api_key');
@@ -23,6 +26,14 @@ class MailtrapService implements EmailInterface
         }
     }
 
+    /**
+     * @param string $to
+     * @param string $subject
+     * @param object $mailable
+     * @param array $attachments
+     * @param int $priority
+     * @return void
+     */
     public function send(
         string $to,
         string $subject,
@@ -39,6 +50,14 @@ class MailtrapService implements EmailInterface
           ->onConnection(config('laravel-tsd.mail.queue.connection', config('queue.default', 'redis')));
     }
 
+    /**
+     * @param array $tos
+     * @param string $subject
+     * @param object $mailable
+     * @param array $attachments
+     * @param int $priority
+     * @return void
+     */
     public function sendBulk(
         array $tos,
         string $subject,
@@ -56,6 +75,14 @@ class MailtrapService implements EmailInterface
         ]));
     }
 
+    /**
+     * @param string $to
+     * @param string $subject
+     * @param object $mailable
+     * @param array $attachments
+     * @return void
+     * @throws AppException
+     */
     public function sendSync(
         string $to,
         string $subject,
@@ -88,7 +115,11 @@ class MailtrapService implements EmailInterface
                 }
             }
 
-            $mailtrap = MailtrapClient::initSendingEmails(apiKey: $this->apiKey);
+            $mailtrap = MailtrapClient::initSendingEmails(
+                apiKey: $this->apiKey,
+                isSandbox: (bool) config('laravel-tsd.mail.mailtrap.use_sandbox', true),
+                inboxId: (int) config('laravel-tsd.mail.mailtrap.inbox_id')
+            );
             $response = $mailtrap->send($email);
 
             Log::channel('json-daily')->info('Email sent successfully via Mailtrap', AppLog::getRequestContext(null, [
@@ -108,11 +139,23 @@ class MailtrapService implements EmailInterface
         }
     }
 
+    /**
+     * @param string $email
+     * @return bool
+     */
     public function isValidEmail(string $email): bool
     {
         return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
     }
 
+    /**
+     * @param string $to
+     * @param string $subject
+     * @param object $mailable
+     * @param array $attachments
+     * @param int $attempts
+     * @return bool
+     */
     public function sendWithRetry(
         string $to,
         string $subject,
