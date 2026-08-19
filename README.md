@@ -16,7 +16,9 @@ composer require daniardev/laravel-tsd
 
 ## Setup (REQUIRED)
 
-Follow these steps to fully integrate the package into your project:
+Follow the **[Installation Guide](docs/installation-guide.md)** — a single page covering install → setup → verify.
+
+Summary of the steps:
 
 ### Step 1: Setup Exception Handler
 
